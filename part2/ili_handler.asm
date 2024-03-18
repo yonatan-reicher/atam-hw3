@@ -19,7 +19,7 @@ my_ili_handler:
 
   # RAX - Address of instruction
   # RDX - opcode holder
-  # RBX, RCX - helpers
+  # RBX - Incremented return address
 
   # Set rax. The address is on the stack (from the frame).
   mov 8(%rbp), %rax
@@ -32,12 +32,30 @@ my_ili_handler:
   jne length_is_1
   # Length is 2. Skip the first one.
   mov 1(%rax), %dl
+  inc %rbx
 length_is_1:
+  inc %rbx
+  add %rax, %rbx
 
   # Call the function!
   mov %rdx, %rdi
-  mov %rax, %rbx
-  call what_to_do
+    push %rcx
+    push %rdx
+    push %rsi
+    push %rdi
+    push %r8
+    push %r9
+    push %r10
+    push %r11
+    call what_to_do
+    pop %r11
+    pop %r10
+    pop %r9
+    pop %r8
+    pop %rdi
+    pop %rsi
+    pop %rdx
+    pop %rcx
   cmp $0, %rax
   jnz my_return_path
   # Do the original interrupt on a rax=0!
