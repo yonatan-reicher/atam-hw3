@@ -1,0 +1,15 @@
+# Ignore executables
+*
+!*.*
+!*/
+
+*.o
+*.mod.c
+*.ko
+*.cmd
+*.swp
+.tmp_versions/
+Module.*
+*.mk
+filesystem.img
+modules.order
