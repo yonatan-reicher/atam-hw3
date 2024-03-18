@@ -57,7 +57,7 @@ length_is_1:
     pop %rdx
     pop %rcx
   cmp $0, %rax
-  jnz my_return_path
+  jne my_return_path
   # Do the original interrupt on a rax=0!
   pop %rdi
   pop %rdx
@@ -69,10 +69,9 @@ length_is_1:
 my_return_path:
   # What we need to do:
   # 1. RDI <- RAX
-  # 2. Set return address to one instruction after!
+  # 2. Set return address!
   mov %rax, %rdi
   # Right now RBX has the return address
-  inc %rbx
   mov %rbx, 8(%rbp)
 
   pop %rdx # Ignore the stored %rdi value!
