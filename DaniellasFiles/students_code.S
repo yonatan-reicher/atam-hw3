@@ -25,6 +25,13 @@ movl $0, -36(%rbp) # counter
 movl $0, -40(%rbp) # temp mul
 movl $0, -44(%rbp) # temp sum
 
+
+CHECK_PROD:
+movl -28(%rbp), %eax #max_col_a
+cmpl  -36(%rbp), %eax #counter==max_col_a?
+ja LOOP_PROD
+jmp END_PROD
+
 LOOP_PROD:
 #set up for get element a:
 movq -8(%rbp), %rdi #int* mat[] a
@@ -44,24 +51,22 @@ call get_element_from_matrix
 imull -40(%rbp), %eax # multiply  
 addl  %eax, -44(%rbp) #add to sum 
 
-incl -36(%rbp) 
-movl -28(%rbp), %eax #max_col_a
-cmpl %eax, -36(%rbp) #counter==max_col_a?
-jne LOOP_PROD
+addl $1, -36(%rbp) 
+jmp CHECK_PROD
 
+END_PROD:
 movl -44(%rbp), %eax
 leave
 	ret
 
 
 matrix_multiplication:
-movq 8(%rbp), %rax # get last parameter before saving rbp
 pushq %rbp
 movq %rsp, %rbp
 cmp %r8d, %r9d 
 jne FAILURE
 
-
+movq 16(%rbp), %rax # get last parameter before saving rbp
 sub $48, %rsp #making space
 #save variables:
 movq %rdi, -8(%rbp) #int* mat[] res
@@ -75,10 +80,24 @@ movl $0, -44(%rbp) #row counter
 movl $0, -48(%rbp) #col counter
 
 
+CHECK_ROWS:
+movl -28(%rbp), %eax
+cmpl -44(%rbp), %eax #counter<max_row_a?
+je SUCCESS
+jmp LOOP_ROWS
+
+
 LOOP_ROWS: #loop for counter < max row a 
-LOOP_COLS: #loop for counter < max col b
 movl $0, -48(%rbp) #col counter
 
+CHECK_COLS:
+movl -48(%rbp), %eax 
+cmpl -40(%rbp), %eax #counter<max_col_b?
+jne LOOP_COLS 
+addl $1, -44(%rbp) #row counter
+jmp CHECK_ROWS 
+
+LOOP_COLS: #loop for counter < max col b
 # move parameters for inner prod
 movq -16(%rbp), %rdi #mat_a
 movq -24(%rbp), %rsi #mat_b
@@ -96,16 +115,9 @@ movl -48(%rbp), %ecx #col counter
 movl %eax, %r8d #inner prod res
 call set_element_in_matrix
 
-incl -48(%rbp) #col counter
-movl -40(%rbp), %eax #max col b
-cmpl -48(%rbp), %eax #counter==max_col_b?
-jne LOOP_COLS
+addl $1, -48(%rbp) #col counter
+jmp CHECK_COLS
 
-incl -44(%rbp) #row counter
-movl -28(%rbp), %eax
-cmpl -44(%rbp), %eax #counter==max_row_a?
-jne LOOP_ROWS
-jmp SUCCESS
 
 FAILURE:
 movl $0, %eax 
